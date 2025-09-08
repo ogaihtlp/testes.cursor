@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Sistema Pessoal de Dados</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafb 0%, #e8f2f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(46, 125, 89, 0.08);
+            overflow: hidden;
+            border: 1px solid #e8f2f0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2e7d59 0%, #337659 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+
+        .user-setup {
+            background: #fff8e7;
+            border: 1px solid #f4e4bc;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .user-setup h3 {
+            color: #8b7355;
+            margin-bottom: 12px;
+        }
+
+        .user-setup input {
+            max-width: 300px;
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .user-welcome {
+            background: #f0f8f5;
+            border: 1px solid #c8e6d0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .user-welcome h3 {
+            color: #2e7d59;
+        }
+        
+        .content {
+            padding: 32px;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+            padding: 28px;
+            background: #fafcfb;
+            border-radius: 8px;
+            border-left: 4px solid #2e7d59;
+            border: 1px solid #f0f4f3;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d5ddd9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2e7d59;
+            box-shadow: 0 0 0 3px rgba(46, 125, 89, 0.08);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #2e7d59 0%, #27704f 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #27704f 0%, #1e5a40 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(46, 125, 89, 0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #5a6c7d 0%, #4a5968 100%);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4a5968 0%, #3d4a56 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+        }
+
+        .btn-travel {
+            background: linear-gradient(135deg, #8b5a3c 0%, #7d4f35 100%);
+        }
+
+        .btn-travel:hover {
+            background: linear-gradient(135deg, #7d4f35 0%, #6b4228 100%);
+        }
+
+        .edit-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-left: 5px;
+        }
+        
+        .edit-btn:hover {
+            background: #e67e22;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e8f2f0;
+            background: #f8fafb;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            padding: 16px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5a6c7d;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: #2e7d59;
+            background: white;
+            border-bottom-color: #2e7d59;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f4f3;
+            color: #2e7d59;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(46, 125, 89, 0.06);
+            border: 1px solid #e8f2f0;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, #2e7d59 0%, #337659 100%);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f4f3;
+            font-size: 14px;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafb;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(46, 125, 89, 0.06);
+            border: 1px solid #e8f2f0;
+            border-top: 3px solid #2e7d59;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(46, 125, 89, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: 600;
+            color: #2e7d59;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #5a6c7d;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .travel-stats {
+            border-top-color: #8b5a3c;
+        }
+
+        .travel-stats .stat-number {
+            color: #8b5a3c;
+        }
+
+        .edit-mode {
+            background: #fff3cd !important;
+            border: 2px solid #ffc107 !important;
+        }
+
+        .edit-indicator {
+            background: #ffc107;
+            color: #212529;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                padding: 12px 20px;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Melhorias visuais adicionais */
+        .section:hover {
+            border-left-color: #27704f;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:hover {
+            border-color: #c8e6d0;
+        }
+
+        /* Status de sucesso */
+        .success-state {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sistema de Gestão Pessoal</h1>
+            <p>Controle profissional de dados mensais e registros de viagem</p>
+        </div>
+        
+        <div class="content">
+            <!-- Setup do Usuário -->
+            <div id="userSetup" class="user-setup">
+                <h3>👋 Configuração Inicial</h3>
+                <p>Digite seu nome para personalizar o sistema:</p>
+                <input type="text" id="userName" placeholder="Seu nome completo">
+                <button class="btn" onclick="setupUser()">Confirmar</button>
+            </div>
+
+            <!-- Boas-vindas -->
+            <div id="userWelcome" class="user-welcome hidden">
+                <h3>Bem-vindo(a), <span id="welcomeName"></span>! 👨‍💼</h3>
+                <p>Seus dados são armazenados localmente no navegador</p>
+                <button class="btn btn-secondary" onclick="changeUser()">Alterar nome</button>
+            </div>
+
+            <!-- Estatísticas -->
+            <div id="statsSection" class="hidden">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAtendimentos">0</div>
+                        <div class="stat-label">Total Atendimentos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalHoras">0</div>
+                        <div class="stat-label">Total Horas Extras</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalTreinamentos">0</div>
+                        <div class="stat-label">Total Treinamentos</div>
+                    </div>
+                    <div class="stat-card travel-stats">
+                        <div class="stat-number" id="totalViagens">0</div>
+                        <div class="stat-label">Total Viagens</div>
+                    </div>
+                    <div class="stat-card travel-stats">
+                        <div class="stat-number" id="totalDeslocamento">0</div>
+                        <div class="stat-label">Horas Deslocamento</div>
+                    </div>
+                    <div class="stat-card travel-stats">
+                        <div class="stat-number" id="totalAtendimentoViagem">0</div>
+                        <div class="stat-label">Horas Atendimento</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div id="mainContent" class="hidden">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('monthly')">📋 Dados Mensais</button>
+                    <button class="tab" onclick="switchTab('travel')">✈️ Registros de Viagem</button>
+                </div>
+
+                <!-- Dados Mensais -->
+                <div id="monthly" class="tab-content active">
+                    <div class="section">
+                        <div id="editIndicator" class="edit-indicator hidden">
+                            📝 Modo de Edição - Modifique os dados e clique em "Salvar Alterações"
+                        </div>
+                        <h2>📝 Cadastrar Dados Mensais</h2>
+                        <form id="monthlyForm">
+                            <div class="form-group">
+                                <label for="mes">Mês de Referência</label>
+                                <select id="mes" required>
+                                    <option value="">Selecione o mês</option>
+                                    <option value="Janeiro">Janeiro</option>
+                                    <option value="Fevereiro">Fevereiro</option>
+                                    <option value="Março">Março</option>
+                                    <option value="Abril">Abril</option>
+                                    <option value="Maio">Maio</option>
+                                    <option value="Junho">Junho</option>
+                                    <option value="Julho">Julho</option>
+                                    <option value="Agosto">Agosto</option>
+                                    <option value="Setembro">Setembro</option>
+                                    <option value="Outubro">Outubro</option>
+                                    <option value="Novembro">Novembro</option>
+                                    <option value="Dezembro">Dezembro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="atendimentos">Número de Atendimentos</label>
+                                    <input type="number" id="atendimentos" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="horasExtras">Horas em Atividades de Outros Setores</label>
+                                    <input type="number" id="horasExtras" min="0" step="0.5" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="treinamentos">Treinamentos/Capacitações Online (horas)</label>
+                                    <input type="number" id="treinamentos" min="0" step="0.5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="tempoOff">Tempo Off - Viagens (horas)</label>
+                                    <input type="number" id="tempoOff" min="0" step="0.5" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observacoesMonthly">Observações (opcional)</label>
+                                <input type="text" id="observacoesMonthly" placeholder="Ex: Cliente, projeto, finalidade...">
+                            </div>
+                            
+                            <button type="submit" class="btn" id="monthlySubmitBtn">➕ Adicionar Registro</button>
+                            <button type="button" class="btn btn-secondary" id="cancelEditBtn" onclick="cancelEdit()" style="display: none;">❌ Cancelar Edição</button>
+                        </form>
+                    </div>
+
+                    <!-- Visualização dos Dados Mensais -->
+                    <div class="section">
+                        <h2>📋 Registros Mensais</h2>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" id="monthlyTable">
+                                <thead>
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th>Atendimentos</th>
+                                        <th>Horas Extras</th>
+                                        <th>Treinamentos (h)</th>
+                                        <th>Tempo Off (h)</th>
+                                        <th>Observações</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="monthlyTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Viagens -->
+                <div id="travel" class="tab-content">
+                    <div class="section">
+                        <div id="editIndicatorTravel" class="edit-indicator hidden">
+                            📝 Modo de Edição - Modifique os dados e clique em "Salvar Alterações"
+                        </div>
+                        <h2>✈️ Registrar Nova Viagem</h2>
+                        <form id="travelForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cidade">Cidade de Destino</label>
+                                    <input type="text" id="cidade" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="tempoDeslocamento">Tempo de Deslocamento (horas)</label>
+                                    <input type="number" id="tempoDeslocamento" min="0" step="0.5" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tempoAtendimento">Tempo em Atendimento (horas)</label>
+                                    <input type="number" id="tempoAtendimento" min="0" step="0.5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dataInicio">Data de Início</label>
+                                    <input type="date" id="dataInicio" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="dataFim">Data de Término</label>
+                                    <input type="date" id="dataFim" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="observacoesTravel">Observações (opcional)</label>
+                                    <input type="text" id="observacoesTravel" placeholder="Ex: Cliente, projeto, finalidade...">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-travel" id="travelSubmitBtn">🚀 Registrar Viagem</button>
+                            <button type="button" class="btn btn-secondary" id="cancelEditTravelBtn" onclick="cancelTravelEdit()" style="display: none;">❌ Cancelar Edição</button>
+                        </form>
+                    </div>
+
+                    <!-- Visualização das Viagens -->
+                    <div class="section">
+                        <h2>🗺️ Histórico de Viagens</h2>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" id="travelTable">
+                                <thead>
+                                    <tr>
+                                        <th>Cidade</th>
+                                        <th>Início</th>
+                                        <th>Término</th>
+                                        <th>Deslocamento (h)</th>
+                                        <th>Atendimento (h)</th>
+                                        <th>Observações</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="travelTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="section">
+                    <h2>🔧 Ferramentas</h2>
+                    <button class="btn btn-success" onclick="exportToExcel()">📊 Exportar para Excel</button>
+                    <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Limpar Todos os Dados</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = '';
+        let monthlyData = [];
+        let travelData = [];
+        let editingMonthlyId = null;
+        let editingTravelId = null;
+        
+        // Inicialização
+        function init() {
+            loadUserData();
+            if (currentUser) {
+                showMainContent();
+            }
+        }
+
+        // Setup do usuário
+        function setupUser() {
+            const userName = document.getElementById('userName').value.trim();
+            if (userName) {
+                currentUser = userName;
+                saveUserData();
+                showMainContent();
+            } else {
+                alert('Por favor, digite seu nome!');
+            }
+        }
+
+        function changeUser() {
+            document.getElementById('userSetup').classList.remove('hidden');
+            document.getElementById('userWelcome').classList.add('hidden');
+            document.getElementById('statsSection').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('userName').value = currentUser;
+        }
+
+        function showMainContent() {
+            document.getElementById('userSetup').classList.add('hidden');
+            document.getElementById('userWelcome').classList.remove('hidden');
+            document.getElementById('statsSection').classList.remove('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('welcomeName').textContent = currentUser;
+            loadSavedData();
+        }
+
+        // Gerenciamento de dados do usuário
+        function loadUserData() {
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                currentUser = userData;
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('currentUser', currentUser);
+        }
+
+        // Gerenciamento de tabs
+        function switchTab(tabName) {
+            // Cancelar edições ativas
+            cancelEdit();
+            cancelTravelEdit();
+            
+            // Remove active de todas as tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Adiciona active na tab clicada
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Carregar dados salvos
+        function loadSavedData() {
+            const savedMonthly = localStorage.getItem(`monthlyData_${currentUser}`);
+            const savedTravel = localStorage.getItem(`travelData_${currentUser}`);
+            
+            if (savedMonthly) {
+                monthlyData = JSON.parse(savedMonthly);
+            }
+            if (savedTravel) {
+                travelData = JSON.parse(savedTravel);
+            }
+            
+            updateMonthlyTable();
+            updateTravelTable();
+            updateStats();
+        }
+        
+        // Salvar dados
+        function saveData() {
+            localStorage.setItem(`monthlyData_${currentUser}`, JSON.stringify(monthlyData));
+            localStorage.setItem(`travelData_${currentUser}`, JSON.stringify(travelData));
+        }
+        
+        // Formulário de dados mensais
+        document.getElementById('monthlyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const mes = document.getElementById('mes').value;
+            const atendimentos = parseInt(document.getElementById('atendimentos').value);
+            const horasExtras = parseFloat(document.getElementById('horasExtras').value);
+            const treinamentos = parseFloat(document.getElementById('treinamentos').value);
+            const tempoOff = parseFloat(document.getElementById('tempoOff').value);
+            const observacoes = document.getElementById('observacoesMonthly').value.trim();
+
+            if (editingMonthlyId) {
+                // Modo edição
+                const index = monthlyData.findIndex(entry => entry.id === editingMonthlyId);
+                if (index !== -1) {
+                    monthlyData[index] = {
+                        id: editingMonthlyId,
+                        mes,
+                        atendimentos,
+                        horasExtras,
+                        treinamentos,
+                        tempoOff,
+                        observacoes
+                    };
+                }
+                cancelEdit();
+                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro atualizado!');
+            } else {
+                // Modo novo registro
+                const newEntry = {
+                    id: Date.now(),
+                    mes,
+                    atendimentos,
+                    horasExtras,
+                    treinamentos,
+                    tempoOff,
+                    observacoes
+                };
+                
+                monthlyData.push(newEntry);
+                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro adicionado!');
+                document.getElementById('monthlyForm').reset();
+            }
+            
+            saveData();
+            updateMonthlyTable();
+            updateStats();
+        });
+
+        // Formulário de viagens
+        document.getElementById('travelForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const cidade = document.getElementById('cidade').value;
+            const tempoDeslocamento = parseFloat(document.getElementById('tempoDeslocamento').value);
+            const tempoAtendimento = parseFloat(document.getElementById('tempoAtendimento').value);
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const observacoes = document.getElementById('observacoesTravel').value.trim();
+            
+            // Validar datas
+            if (new Date(dataFim) < new Date(dataInicio)) {
+                alert('A data de término não pode ser anterior à data de início!');
+                return;
+            }
+            
+            if (editingTravelId) {
+                // Modo edição
+                const index = travelData.findIndex(entry => entry.id === editingTravelId);
+                if (index !== -1) {
+                    travelData[index] = {
+                        id: editingTravelId,
+                        cidade,
+                        tempoDeslocamento,
+                        tempoAtendimento,
+                        dataInicio,
+                        dataFim,
+                        observacoes
+                    };
+                }
+                cancelTravelEdit();
+                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem atualizada!');
+            } else {
+                // Modo novo registro
+                const newTravel = {
+                    id: Date.now(),
+                    cidade,
+                    tempoDeslocamento,
+                    tempoAtendimento,
+                    dataInicio,
+                    dataFim,
+                    observacoes
+                };
+                
+                travelData.push(newTravel);
+                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem registrada!');
+                document.getElementById('travelForm').reset();
+            }
+            
+            saveData();
+            updateTravelTable();
+            updateStats();
+        });
+
+        // Funções de edição para dados mensais
+        function editMonthlyEntry(id) {
+            const entry = monthlyData.find(e => e.id === id);
+            if (!entry) return;
+
+            editingMonthlyId = id;
+            
+            // Preencher formulário
+            document.getElementById('mes').value = entry.mes;
+            document.getElementById('atendimentos').value = entry.atendimentos;
+            document.getElementById('horasExtras').value = entry.horasExtras;
+            document.getElementById('treinamentos').value = entry.treinamentos;
+            document.getElementById('tempoOff').value = entry.tempoOff;
+            document.getElementById('observacoesMonthly').value = entry.observacoes || '';
+
+            // Alterar interface para modo edição
+            document.getElementById('editIndicator').classList.remove('hidden');
+            document.getElementById('monthlySubmitBtn').innerHTML = '💾 Salvar Alterações';
+            document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+            
+            // Destacar seção
+            document.querySelector('#monthly .section').classList.add('edit-mode');
+            
+            // Scroll para o formulário
+            document.querySelector('#monthly .section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingMonthlyId = null;
+            document.getElementById('editIndicator').classList.add('hidden');
+            document.getElementById('monthlySubmitBtn').innerHTML = '➕ Adicionar Registro';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.querySelector('#monthly .section').classList.remove('edit-mode');
+            document.getElementById('monthlyForm').reset();
+        }
+
+        // Funções de edição para viagens
+        function editTravelEntry(id) {
+            const entry = travelData.find(e => e.id === id);
+            if (!entry) return;
+
+            editingTravelId = id;
+            
+            // Preencher formulário
+            document.getElementById('cidade').value = entry.cidade;
+            document.getElementById('tempoDeslocamento').value = entry.tempoDeslocamento;
+            document.getElementById('tempoAtendimento').value = entry.tempoAtendimento;
+            document.getElementById('dataInicio').value = entry.dataInicio;
+            document.getElementById('dataFim').value = entry.dataFim;
+            document.getElementById('observacoesTravel').value = entry.observacoes || '';
+
+            // Alterar interface para modo edição
+            document.getElementById('editIndicatorTravel').classList.remove('hidden');
+            document.getElementById('travelSubmitBtn').innerHTML = '💾 Salvar Alterações';
+            document.getElementById('cancelEditTravelBtn').style.display = 'inline-flex';
+            
+            // Destacar seção
+            document.querySelector('#travel .section').classList.add('edit-mode');
+            
+            // Scroll para o formulário
+            document.querySelector('#travel .section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelTravelEdit() {
+            editingTravelId = null;
+            document.getElementById('editIndicatorTravel').classList.add('hidden');
+            document.getElementById('travelSubmitBtn').innerHTML = '🚀 Registrar Viagem';
+            document.getElementById('cancelEditTravelBtn').style.display = 'none';
+            document.querySelector('#travel .section').classList.remove('edit-mode');
+            document.getElementById('travelForm').reset();
+        }
+
+        function showSuccessMessage(button, message) {
+            const originalText = button.innerHTML;
+            const originalClass = button.className;
+            
+            button.innerHTML = '✓ ' + message;
+            button.className = originalClass + ' success-state';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.className = originalClass;
+            }, 2000);
+        }
+        
+        // Atualizar tabela mensal
+        function updateMonthlyTable() {
+            const tbody = document.getElementById('monthlyTableBody');
+            tbody.innerHTML = '';
+            
+            monthlyData.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.mes}</td>
+                    <td>${entry.atendimentos}</td>
+                    <td>${entry.horasExtras}h</td>
+                    <td>${entry.treinamentos}h</td>
+                    <td>${entry.tempoOff}h</td>
+                    <td>${entry.observacoes || '-'}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editMonthlyEntry(${entry.id})">✎ Editar</button>
+                        <button class="delete-btn" onclick="deleteMonthlyEntry(${entry.id})">✕ Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Atualizar tabela de viagens
+        function updateTravelTable() {
+            const tbody = document.getElementById('travelTableBody');
+            tbody.innerHTML = '';
+            
+            travelData.forEach(entry => {
+                const row = document.createElement('tr');
+                const inicio = new Date(entry.dataInicio).toLocaleDateString('pt-BR');
+                const fim = new Date(entry.dataFim).toLocaleDateString('pt-BR');
+                
+                row.innerHTML = `
+                    <td>${entry.cidade}</td>
+                    <td>${inicio}</td>
+                    <td>${fim}</td>
+                    <td>${entry.tempoDeslocamento}h</td>
+                    <td>${entry.tempoAtendimento}h</td>
+                    <td>${entry.observacoes || '-'}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editTravelEntry(${entry.id})">✎ Editar</button>
+                        <button class="delete-btn" onclick="deleteTravelEntry(${entry.id})">✕ Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Atualizar estatísticas
+        function updateStats() {
+            const totalAtendimentos = monthlyData.reduce((sum, entry) => sum + entry.atendimentos, 0);
+            const totalHoras = monthlyData.reduce((sum, entry) => sum + entry.horasExtras, 0);
+            const totalTreinamentos = monthlyData.reduce((sum, entry) => sum + entry.treinamentos, 0);
+            const totalViagens = travelData.length;
+            const totalDeslocamento = travelData.reduce((sum, entry) => sum + entry.tempoDeslocamento, 0);
+            const totalAtendimentoViagem = travelData.reduce((sum, entry) => sum + entry.tempoAtendimento, 0);
+            
+            document.getElementById('totalAtendimentos').textContent = totalAtendimentos;
+            document.getElementById('totalHoras').textContent = totalHoras.toFixed(1);
+            document.getElementById('totalTreinamentos').textContent = totalTreinamentos.toFixed(1);
+            document.getElementById('totalViagens').textContent = totalViagens;
+            document.getElementById('totalDeslocamento').textContent = totalDeslocamento.toFixed(1);
+            document.getElementById('totalAtendimentoViagem').textContent = totalAtendimentoViagem.toFixed(1);
+        }
+        
+        // Excluir entradas
+        function deleteMonthlyEntry(id) {
+            if (confirm('Tem certeza que deseja excluir este registro?')) {
+                monthlyData = monthlyData.filter(entry => entry.id !== id);
+                saveData();
+                updateMonthlyTable();
+                updateStats();
+                
+                // Se estava editando este registro, cancelar edição
+                if (editingMonthlyId === id) {
+                    cancelEdit();
+                }
+            }
+        }
+
+        function deleteTravelEntry(id) {
+            if (confirm('Tem certeza que deseja excluir este registro de viagem?')) {
+                travelData = travelData.filter(entry => entry.id !== id);
+                saveData();
+                updateTravelTable();
+                updateStats();
+                
+                // Se estava editando este registro, cancelar edição
+                if (editingTravelId === id) {
+                    cancelTravelEdit();
+                }
+            }
+        }
+        
+        // Limpar todos os dados
+        function clearAllData() {
+            if (confirm('Tem certeza que deseja limpar todos os seus dados? Esta ação não pode ser desfeita.')) {
+                monthlyData = [];
+                travelData = [];
+                cancelEdit();
+                cancelTravelEdit();
+                saveData();
+                updateMonthlyTable();
+                updateTravelTable();
+                updateStats();
+            }
+        }
+        
+        // Exportar para Excel
+        function exportToExcel() {
+            if (monthlyData.length === 0 && travelData.length === 0) {
+                alert('Não há dados para exportar!');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            // Dados mensais
+            if (monthlyData.length > 0) {
+                const monthlyExport = monthlyData.map(entry => ({
+                    'Mês': entry.mes,
+                    'Atendimentos': entry.atendimentos,
+                    'Horas em Outros Setores': entry.horasExtras,
+                    'Treinamentos/Capacitações (horas)': entry.treinamentos,
+                    'Tempo Off - Viagens (horas)': entry.tempoOff,
+                    'Observações': entry.observacoes || ''
+                }));
+                
+                const wsMonthly = XLSX.utils.json_to_sheet(monthlyExport);
+                wsMonthly['!cols'] = [
+                    { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 25 }, { wch: 30 }
+                ];
+                XLSX.utils.book_append_sheet(wb, wsMonthly, 'Dados Mensais');
+            }
+            
+            // Dados de viagens
+            if (travelData.length > 0) {
+                const travelExport = travelData.map(entry => ({
+                    'Cidade': entry.cidade,
+                    'Data Início': new Date(entry.dataInicio).toLocaleDateString('pt-BR'),
+                    'Data Fim': new Date(entry.dataFim).toLocaleDateString('pt-BR'),
+                    'Tempo Deslocamento (horas)': entry.tempoDeslocamento,
+                    'Tempo Atendimento (horas)': entry.tempoAtendimento,
+                    'Observações': entry.observacoes || ''
+                }));
+                
+                const wsTravel = XLSX.utils.json_to_sheet(travelExport);
+                wsTravel['!cols'] = [
+                    { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 30 }
+                ];
+                XLSX.utils.book_append_sheet(wb, wsTravel, 'Viagens');
+            }
+            
+            // Nome do arquivo
+            const now = new Date();
+            const fileName = `dados_${currentUser.replace(/\s+/g, '_')}_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.xlsx`;
+            
+            // Fazer download
+            XLSX.writeFile(wb, fileName);
+        }
+        
+        // Inicializar aplicação
+        init();
+    </script>
+</body>
+</html>
