@@ -42,22 +42,53 @@ Sistema completo para controle de dados mensais e registros de viagem, com front
 
 ## 🔧 Instalação e Execução
 
-### 1. Instalar Dependências
+### Método Recomendado: Ambiente Virtual
+
+#### Linux/Mac
 ```bash
-# Instalar dependências (pode ser necessário usar --break-system-packages em alguns ambientes)
-python3 -m pip install -r requirements.txt
+# Configuração automática
+./setup_venv.sh
+
+# Executar (com venv ativado)
+python run.py
 ```
 
-### 2. Executar o Backend
+#### Windows
 ```bash
-# Opção 1: Via script de conveniência
+# Configuração automática
+setup_venv.bat
+
+# Executar (com venv ativado)
+python run.py
+```
+
+#### Manual
+```bash
+# 1. Criar ambiente virtual
+python3 -m venv venv
+
+# 2. Ativar ambiente virtual
+# Linux/Mac:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# 3. Instalar dependências
+pip install -r requirements.txt
+
+# 4. Executar
+python run.py
+```
+
+### Método Alternativo: Sem Ambiente Virtual
+```bash
+# 1. Instalar dependências globalmente
+python3 -m pip install --break-system-packages -r requirements.txt
+
+# 2. Executar o backend
 python3 run.py
-
-# Opção 2: Via uvicorn diretamente
+# ou
 python3 -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-
-# Opção 3: Via módulo backend
-python3 -m backend.main
 ```
 
 ### 3. Acessar a Aplicação

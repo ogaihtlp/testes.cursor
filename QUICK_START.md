@@ -1,6 +1,33 @@
 # 🚀 Início Rápido - Sistema de Gestão Pessoal
 
-## Em 3 Passos
+## ✅ **Método Recomendado: Com Ambiente Virtual**
+
+### Linux/Mac
+```bash
+# Configuração automática
+chmod +x setup_venv.sh
+./setup_venv.sh
+
+# Ou manual:
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python run.py
+```
+
+### Windows
+```bash
+# Configuração automática
+setup_venv.bat
+
+# Ou manual:
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python run.py
+```
+
+## ⚠️ **Método Alternativo: Sem Ambiente Virtual**
 
 ### 1️⃣ Instalar
 ```bash
