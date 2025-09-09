@@ -21,7 +21,7 @@ def create_test_data():
                 horas_extras=12.5,
                 treinamentos=8.0,
                 tempo_off=4.0,
-                observacoes="Início do projeto Alpha",
+                observacoes="Cliente ABC Corp - projeto remoto",
                 usuario="João Silva"
             ),
             MonthlyData(
@@ -30,7 +30,7 @@ def create_test_data():
                 horas_extras=15.0,
                 treinamentos=6.0,
                 tempo_off=8.0,
-                observacoes="Implementação da fase 2",
+                observacoes="Projeto Beta - trabalho híbrido",
                 usuario="João Silva"
             ),
             MonthlyData(
@@ -39,7 +39,34 @@ def create_test_data():
                 horas_extras=10.0,
                 treinamentos=12.0,
                 tempo_off=6.0,
-                observacoes="Treinamento em novas tecnologias",
+                observacoes="Cliente TechCorp - atendimento presencial",
+                usuario="João Silva"
+            ),
+            MonthlyData(
+                mes=MonthEnum.ABRIL,
+                atendimentos=35,
+                horas_extras=18.0,
+                treinamentos=4.0,
+                tempo_off=10.0,
+                observacoes="Empresa Delta - home office",
+                usuario="João Silva"
+            ),
+            MonthlyData(
+                mes=MonthEnum.MAIO,
+                atendimentos=29,
+                horas_extras=14.0,
+                treinamentos=9.0,
+                tempo_off=5.0,
+                observacoes="Cliente ABC Corp - continuação remoto",
+                usuario="João Silva"
+            ),
+            MonthlyData(
+                mes=MonthEnum.JUNHO,
+                atendimentos=31,
+                horas_extras=16.0,
+                treinamentos=7.0,
+                tempo_off=12.0,
+                observacoes="Projeto Gamma - atendimento presencial",
                 usuario="João Silva"
             )
         ]
@@ -52,25 +79,52 @@ def create_test_data():
                 tempo_atendimento=16.0,
                 data_inicio=date(2024, 1, 15),
                 data_fim=date(2024, 1, 17),
-                observacoes="Reunião com cliente ABC Corp",
+                observacoes="Cliente ABC Corp - reunião estratégica",
                 usuario="João Silva"
             ),
             TravelData(
-                cidade="Brasília",
-                tempo_deslocamento=6.0,
-                tempo_atendimento=12.0,
+                cidade="Rio de Janeiro",
+                tempo_deslocamento=2.5,
+                tempo_atendimento=14.0,
                 data_inicio=date(2024, 2, 8),
                 data_fim=date(2024, 2, 10),
-                observacoes="Workshop de capacitação",
+                observacoes="Empresa TechCorp - workshop",
                 usuario="João Silva"
             ),
             TravelData(
                 cidade="Belo Horizonte",
                 tempo_deslocamento=3.0,
-                tempo_atendimento=20.0,
+                tempo_atendimento=12.0,
                 data_inicio=date(2024, 3, 5),
-                data_fim=date(2024, 3, 8),
-                observacoes="Implementação do sistema XYZ",
+                data_fim=date(2024, 3, 7),
+                observacoes="Projeto Gamma - implementação",
+                usuario="João Silva"
+            ),
+            TravelData(
+                cidade="São Paulo",
+                tempo_deslocamento=4.0,
+                tempo_atendimento=20.0,
+                data_inicio=date(2024, 4, 12),
+                data_fim=date(2024, 4, 15),
+                observacoes="Cliente ABC Corp - fase 2",
+                usuario="João Silva"
+            ),
+            TravelData(
+                cidade="Brasília",
+                tempo_deslocamento=5.0,
+                tempo_atendimento=18.0,
+                data_inicio=date(2024, 5, 20),
+                data_fim=date(2024, 5, 23),
+                observacoes="Empresa Delta - consultoria",
+                usuario="João Silva"
+            ),
+            TravelData(
+                cidade="Rio de Janeiro",
+                tempo_deslocamento=2.0,
+                tempo_atendimento=10.0,
+                data_inicio=date(2024, 6, 10),
+                data_fim=date(2024, 6, 12),
+                observacoes="Cliente TechCorp - treinamento",
                 usuario="João Silva"
             )
         ]

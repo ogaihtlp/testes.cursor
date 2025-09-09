@@ -18,6 +18,15 @@ Sistema completo para controle de dados mensais e registros de viagem, com front
 - Controle de período da viagem (início/fim)
 - Observações sobre cada viagem
 
+### 📊 Dashboard Analítico Avançado
+- **🥧 Distribuição por Tipo de Atendimento** - Gráfico donut com categorização automática (remoto/presencial/híbrido)
+- **🏙️ Horas por Cidade** - Barras empilhadas mostrando deslocamento vs atendimento
+- **📈 Evolução Mensal** - Gráficos de linha com trends temporais
+- **🏢 Top Clientes/Projetos** - Ranking baseado nas observações
+- Gráficos interativos com Chart.js
+- Atualização automática em tempo real
+- Design responsivo para mobile e desktop
+
 ### 📊 Dashboard e Relatórios
 - Estatísticas consolidadas em tempo real
 - Totalizadores de atendimentos, horas extras e treinamentos
@@ -30,6 +39,7 @@ Sistema completo para controle de dados mensais e registros de viagem, com front
 ### Frontend
 - **HTML5** com design responsivo
 - **JavaScript vanilla** para interatividade
+- **Chart.js** para gráficos interativos e dashboard
 - **CSS3** com gradientes e animações
 - **SheetJS (xlsx)** para exportação Excel
 - **LocalStorage** para persistência local
@@ -120,6 +130,12 @@ python3 -c "from backend.test_data import create_test_data; create_test_data()"
 ### Estatísticas
 - `GET /api/stats/` - Obter estatísticas consolidadas
 
+### Analytics (Gráficos)
+- `GET /api/analytics/attendance-distribution` - Distribuição por tipo de atendimento
+- `GET /api/analytics/hours-by-city` - Horas por cidade (deslocamento + atendimento)
+- `GET /api/analytics/monthly-evolution` - Evolução mensal de métricas
+- `GET /api/analytics/top-clients` - Top clientes/projetos baseado em observações
+
 ## 💾 Estrutura do Banco de Dados
 
 ### Tabela `monthly_data`
@@ -148,6 +164,9 @@ python3 -c "from backend.test_data import create_test_data; create_test_data()"
 - [x] Backend FastAPI completo com SQLModel
 - [x] Frontend integrado com API REST
 - [x] CRUD completo para dados mensais e viagens
+- [x] **Dashboard analítico completo com 4 gráficos interativos**
+- [x] **Endpoints de analytics para agregação de dados**
+- [x] **Gráficos Chart.js responsivos e modernos**
 - [x] Estatísticas em tempo real
 - [x] Banco de dados SQLite com migrações automáticas
 - [x] Indicador de conexão API/offline

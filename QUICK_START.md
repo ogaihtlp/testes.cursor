@@ -42,7 +42,9 @@ python3 run.py
 ### 3️⃣ Usar
 1. Abrir `controle de dados.html` no navegador
 2. Digite seu nome na configuração inicial
-3. Começar a usar! 
+3. Explorar o **Dashboard** com gráficos interativos! 📊
+4. Cadastrar dados mensais e de viagem
+5. Visualizar insights em tempo real 
 
 ## 📊 Interface
 
@@ -55,6 +57,16 @@ python3 run.py
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
 
+## 🧪 Testar Dashboard
+
+```bash
+# Executar teste automático dos gráficos
+./test_dashboard.sh
+
+# Criar dados de exemplo
+python3 -c "from backend.test_data import create_test_data; create_test_data()"
+```
+
 ## ❗ Problemas Comuns
 
 ### API não conecta
@@ -65,6 +77,11 @@ curl http://localhost:8000/health
 # Se não estiver, iniciar novamente
 python3 run.py
 ```
+
+### Gráficos não aparecem
+1. Verificar se API está conectada (🟢)
+2. Certificar que há dados cadastrados
+3. Recarregar página (F5)
 
 ### Erro de dependências
 ```bash
@@ -77,3 +94,4 @@ python3 -m pip install --break-system-packages -r requirements.txt
 ---
 
 ✅ **Sistema funcionando?** O indicador no cabeçalho mostra se a API está conectada!
+📊 **Dashboard pronto?** Execute `./test_dashboard.sh` para verificar!

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Sistema Pessoal de Dados</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -426,6 +427,114 @@
         .success-state {
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
         }
+
+        /* Dashboard Analytics */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(46, 125, 89, 0.06);
+            border: 1px solid #e8f2f0;
+            border-top: 3px solid #2e7d59;
+            transition: all 0.2s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(46, 125, 89, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e8f2f0;
+        }
+
+        .chart-title {
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .chart-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2e7d59;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-canvas.small {
+            height: 250px;
+        }
+
+        .chart-canvas.large {
+            height: 350px;
+        }
+
+        .analytics-summary {
+            background: linear-gradient(135deg, #f8fafb 0%, #e8f2f0 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .analytics-summary h3 {
+            color: #2e7d59;
+            margin-bottom: 8px;
+        }
+
+        .loading-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .no-data i {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .chart-container {
+                padding: 16px;
+            }
+
+            .chart-canvas {
+                height: 250px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -487,12 +596,67 @@
             <!-- Tabs -->
             <div id="mainContent" class="hidden">
                 <div class="tabs">
-                    <button class="tab active" onclick="switchTab('monthly')">📋 Dados Mensais</button>
+                    <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+                    <button class="tab" onclick="switchTab('monthly')">📋 Dados Mensais</button>
                     <button class="tab" onclick="switchTab('travel')">✈️ Registros de Viagem</button>
                 </div>
 
+                <!-- Dashboard -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="analytics-summary">
+                        <h3>📊 Dashboard Analítico</h3>
+                        <p>Visualizações interativas dos seus dados de gestão pessoal</p>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <!-- Distribuição por Tipo de Atendimento -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Distribuição por Tipo de Atendimento</h3>
+                                <div class="chart-value" id="attendanceTotal">-</div>
+                            </div>
+                            <div class="chart-canvas small">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Horas por Cidade -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Horas por Cidade (Deslocamento x Atendimento)</h3>
+                                <div class="chart-value" id="cityHoursTotal">-</div>
+                            </div>
+                            <div class="chart-canvas">
+                                <canvas id="cityHoursChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Evolução Mensal de Atendimentos -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Evolução Mensal de Atendimentos</h3>
+                                <div class="chart-value" id="evolutionMonths">-</div>
+                            </div>
+                            <div class="chart-canvas large">
+                                <canvas id="evolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Top Clientes/Projetos -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Top Clientes/Projetos</h3>
+                                <div class="chart-value" id="topClientsTotal">-</div>
+                            </div>
+                            <div class="chart-canvas">
+                                <canvas id="topClientsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Dados Mensais -->
-                <div id="monthly" class="tab-content active">
+                <div id="monthly" class="tab-content">
                     <div class="section">
                         <div id="editIndicator" class="edit-indicator hidden">
                             📝 Modo de Edição - Modifique os dados e clique em "Salvar Alterações"
@@ -891,7 +1055,8 @@
                 // Carregar dados da API em paralelo
                 await Promise.all([
                     loadMonthlyDataFromAPI(),
-                    loadTravelDataFromAPI()
+                    loadTravelDataFromAPI(),
+                    loadAnalyticsFromAPI() // Carregar gráficos
                 ]);
                 
                 updateMonthlyTable();
@@ -913,6 +1078,7 @@
                 updateMonthlyTable();
                 updateTravelTable();
                 updateStats();
+                showNoDataMessage(); // Mostrar que não há dados de gráficos
             }
         }
         
@@ -959,6 +1125,7 @@
                 await loadMonthlyDataFromAPI();
                 updateMonthlyTable();
                 await loadStatsFromAPI();
+                await loadAnalyticsFromAPI(); // Atualizar gráficos
                 
                 // Backup local
                 saveData();
@@ -1010,6 +1177,7 @@
                 await loadTravelDataFromAPI();
                 updateTravelTable();
                 await loadStatsFromAPI();
+                await loadAnalyticsFromAPI(); // Atualizar gráficos
                 
                 // Backup local
                 saveData();
@@ -1177,6 +1345,7 @@
                     await loadMonthlyDataFromAPI();
                     updateMonthlyTable();
                     await loadStatsFromAPI();
+                    await loadAnalyticsFromAPI(); // Atualizar gráficos
                     saveData(); // Backup local
                     
                     // Se estava editando este registro, cancelar edição
@@ -1196,6 +1365,7 @@
                     await loadTravelDataFromAPI();
                     updateTravelTable();
                     await loadStatsFromAPI();
+                    await loadAnalyticsFromAPI(); // Atualizar gráficos
                     saveData(); // Backup local
                     
                     // Se estava editando este registro, cancelar edição
@@ -1273,6 +1443,285 @@
             
             // Fazer download
             XLSX.writeFile(wb, fileName);
+        }
+        
+        // ========== ANALYTICS E GRÁFICOS ==========
+        
+        let charts = {}; // Armazenar instâncias dos gráficos
+        
+        // Carregar dados analíticos da API
+        async function loadAnalyticsFromAPI() {
+            if (!currentUser) return;
+            
+            try {
+                const [attendanceData, cityHoursData, evolutionData, topClientsData] = await Promise.all([
+                    apiCall(`${API_BASE_URL}/analytics/attendance-distribution?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/hours-by-city?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/monthly-evolution?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/top-clients?usuario=${encodeURIComponent(currentUser)}`)
+                ]);
+                
+                // Renderizar gráficos
+                renderAttendanceChart(attendanceData);
+                renderCityHoursChart(cityHoursData);
+                renderEvolutionChart(evolutionData);
+                renderTopClientsChart(topClientsData);
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados analíticos:', error);
+                showNoDataMessage();
+            }
+        }
+        
+        // Gráfico de Distribuição por Tipo de Atendimento (Donut)
+        function renderAttendanceChart(data) {
+            const ctx = document.getElementById('attendanceChart');
+            
+            // Destruir gráfico existente se houver
+            if (charts.attendance) {
+                charts.attendance.destroy();
+            }
+            
+            document.getElementById('attendanceTotal').textContent = data.total;
+            
+            if (data.total === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.attendance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            '#2e7d59', // Remoto - Verde principal
+                            '#8b5a3c', // Presencial - Marrom
+                            '#f39c12'  // Híbrido - Laranja
+                        ],
+                        borderWidth: 0,
+                        hoverBorderWidth: 2,
+                        hoverBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.raw / data.total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Horas por Cidade (Barras Empilhadas)
+        function renderCityHoursChart(data) {
+            const ctx = document.getElementById('cityHoursChart');
+            
+            if (charts.cityHours) {
+                charts.cityHours.destroy();
+            }
+            
+            document.getElementById('cityHoursTotal').textContent = `${data.total_hours.toFixed(1)}h`;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.cityHours = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'h';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}h`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Evolução Mensal (Linha)
+        function renderEvolutionChart(data) {
+            const ctx = document.getElementById('evolutionChart');
+            
+            if (charts.evolution) {
+                charts.evolution.destroy();
+            }
+            
+            document.getElementById('evolutionMonths').textContent = `${data.total_months} meses`;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.evolution = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Meses'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade'
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Top Clientes (Barras Horizontais)
+        function renderTopClientsChart(data) {
+            const ctx = document.getElementById('topClientsChart');
+            
+            if (charts.topClients) {
+                charts.topClients.destroy();
+            }
+            
+            document.getElementById('topClientsTotal').textContent = data.total;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.topClients = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: '#8b5a3c',
+                        borderColor: '#7d4f35',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    return `Ocorrências: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Mostrar mensagem quando não há dados
+        function showNoDataMessage() {
+            const containers = document.querySelectorAll('.chart-canvas');
+            containers.forEach(container => {
+                container.innerHTML = '<div class="no-data">📊<br>Nenhum dado disponível</div>';
+            });
         }
         
         // Inicializar aplicação

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel
 from .database import engine, create_db_and_tables
-from .routers import monthly, travel, stats
+from .routers import monthly, travel, stats, analytics
 
 # Criar aplicação FastAPI
 app = FastAPI(
@@ -59,6 +59,7 @@ def health():
 app.include_router(monthly.router, prefix="/api/monthly", tags=["Dados Mensais"]) 
 app.include_router(travel.router, prefix="/api/travel", tags=["Registros de Viagem"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Estatísticas"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 
 # Servir arquivos estáticos (opcional)
 try:
