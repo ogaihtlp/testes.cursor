@@ -433,6 +433,9 @@
         <div class="header">
             <h1>📊 Sistema de Gestão Pessoal</h1>
             <p>Controle profissional de dados mensais e registros de viagem</p>
+            <div id="apiStatus" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                <span id="apiIndicator">🔄 Verificando conexão...</span>
+            </div>
         </div>
         
         <div class="content">
@@ -654,21 +657,185 @@
         let editingMonthlyId = null;
         let editingTravelId = null;
         
+        // Configuração da API
+        const API_BASE_URL = 'http://localhost:8000/api';
+        let apiConnected = false;
+        
+        // Funções da API
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                alert('Erro na comunicação com o servidor: ' + error.message);
+                throw error;
+            }
+        }
+        
+        // Carregar dados mensais da API
+        async function loadMonthlyDataFromAPI() {
+            if (!currentUser) return;
+            try {
+                const data = await apiCall(`${API_BASE_URL}/monthly/?usuario=${encodeURIComponent(currentUser)}`);
+                monthlyData = data.map(item => ({
+                    id: item.id,
+                    mes: item.mes,
+                    atendimentos: item.atendimentos,
+                    horasExtras: item.horas_extras,
+                    treinamentos: item.treinamentos,
+                    tempoOff: item.tempo_off,
+                    observacoes: item.observacoes
+                }));
+            } catch (error) {
+                console.error('Erro ao carregar dados mensais:', error);
+            }
+        }
+        
+        // Carregar dados de viagem da API
+        async function loadTravelDataFromAPI() {
+            if (!currentUser) return;
+            try {
+                const data = await apiCall(`${API_BASE_URL}/travel/?usuario=${encodeURIComponent(currentUser)}`);
+                travelData = data.map(item => ({
+                    id: item.id,
+                    cidade: item.cidade,
+                    tempoDeslocamento: item.tempo_deslocamento,
+                    tempoAtendimento: item.tempo_atendimento,
+                    dataInicio: item.data_inicio,
+                    dataFim: item.data_fim,
+                    observacoes: item.observacoes
+                }));
+            } catch (error) {
+                console.error('Erro ao carregar dados de viagem:', error);
+            }
+        }
+        
+        // Salvar dados mensais na API
+        async function saveMonthlyDataToAPI(data, isUpdate = false, id = null) {
+            const payload = {
+                mes: data.mes,
+                atendimentos: parseInt(data.atendimentos),
+                horas_extras: parseFloat(data.horasExtras),
+                treinamentos: parseFloat(data.treinamentos),
+                tempo_off: parseFloat(data.tempoOff),
+                observacoes: data.observacoes || null,
+                usuario: currentUser
+            };
+            
+            if (isUpdate && id) {
+                return await apiCall(`${API_BASE_URL}/monthly/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                return await apiCall(`${API_BASE_URL}/monthly/`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+        }
+        
+        // Salvar dados de viagem na API
+        async function saveTravelDataToAPI(data, isUpdate = false, id = null) {
+            const payload = {
+                cidade: data.cidade,
+                tempo_deslocamento: parseFloat(data.tempoDeslocamento),
+                tempo_atendimento: parseFloat(data.tempoAtendimento),
+                data_inicio: data.dataInicio,
+                data_fim: data.dataFim,
+                observacoes: data.observacoes || null,
+                usuario: currentUser
+            };
+            
+            if (isUpdate && id) {
+                return await apiCall(`${API_BASE_URL}/travel/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                return await apiCall(`${API_BASE_URL}/travel/`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+        }
+        
+        // Excluir dados mensais da API
+        async function deleteMonthlyDataFromAPI(id) {
+            return await apiCall(`${API_BASE_URL}/monthly/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                method: 'DELETE'
+            });
+        }
+        
+        // Excluir dados de viagem da API
+        async function deleteTravelDataFromAPI(id) {
+            return await apiCall(`${API_BASE_URL}/travel/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                method: 'DELETE'
+            });
+        }
+        
+        // Carregar estatísticas da API
+        async function loadStatsFromAPI() {
+            if (!currentUser) return;
+            try {
+                const stats = await apiCall(`${API_BASE_URL}/stats/?usuario=${encodeURIComponent(currentUser)}`);
+                document.getElementById('totalAtendimentos').textContent = stats.total_atendimentos;
+                document.getElementById('totalHoras').textContent = stats.total_horas_extras.toFixed(1);
+                document.getElementById('totalTreinamentos').textContent = stats.total_treinamentos.toFixed(1);
+                document.getElementById('totalViagens').textContent = stats.total_viagens;
+                document.getElementById('totalDeslocamento').textContent = stats.total_deslocamento.toFixed(1);
+                document.getElementById('totalAtendimentoViagem').textContent = stats.total_atendimento_viagem.toFixed(1);
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+        
+        // Verificar status da API
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    apiConnected = true;
+                    document.getElementById('apiIndicator').innerHTML = '🟢 API conectada - Dados sincronizados';
+                } else {
+                    throw new Error('API não disponível');
+                }
+            } catch (error) {
+                apiConnected = false;
+                document.getElementById('apiIndicator').innerHTML = '🔴 API desconectada - Modo offline (localStorage)';
+                console.warn('API não disponível, usando modo offline:', error);
+            }
+        }
+        
         // Inicialização
-        function init() {
+        async function init() {
+            await checkAPIStatus();
             loadUserData();
             if (currentUser) {
-                showMainContent();
+                await showMainContent();
             }
         }
 
         // Setup do usuário
-        function setupUser() {
+        async function setupUser() {
             const userName = document.getElementById('userName').value.trim();
             if (userName) {
                 currentUser = userName;
                 saveUserData();
-                showMainContent();
+                await showMainContent();
             } else {
                 alert('Por favor, digite seu nome!');
             }
@@ -682,13 +849,13 @@
             document.getElementById('userName').value = currentUser;
         }
 
-        function showMainContent() {
+        async function showMainContent() {
             document.getElementById('userSetup').classList.add('hidden');
             document.getElementById('userWelcome').classList.remove('hidden');
             document.getElementById('statsSection').classList.remove('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
             document.getElementById('welcomeName').textContent = currentUser;
-            loadSavedData();
+            await loadSavedData();
         }
 
         // Gerenciamento de dados do usuário
@@ -719,20 +886,34 @@
         }
         
         // Carregar dados salvos
-        function loadSavedData() {
-            const savedMonthly = localStorage.getItem(`monthlyData_${currentUser}`);
-            const savedTravel = localStorage.getItem(`travelData_${currentUser}`);
-            
-            if (savedMonthly) {
-                monthlyData = JSON.parse(savedMonthly);
+        async function loadSavedData() {
+            try {
+                // Carregar dados da API em paralelo
+                await Promise.all([
+                    loadMonthlyDataFromAPI(),
+                    loadTravelDataFromAPI()
+                ]);
+                
+                updateMonthlyTable();
+                updateTravelTable();
+                await loadStatsFromAPI();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                // Fallback para localStorage se a API falhar
+                const savedMonthly = localStorage.getItem(`monthlyData_${currentUser}`);
+                const savedTravel = localStorage.getItem(`travelData_${currentUser}`);
+                
+                if (savedMonthly) {
+                    monthlyData = JSON.parse(savedMonthly);
+                }
+                if (savedTravel) {
+                    travelData = JSON.parse(savedTravel);
+                }
+                
+                updateMonthlyTable();
+                updateTravelTable();
+                updateStats();
             }
-            if (savedTravel) {
-                travelData = JSON.parse(savedTravel);
-            }
-            
-            updateMonthlyTable();
-            updateTravelTable();
-            updateStats();
         }
         
         // Salvar dados
@@ -742,7 +923,7 @@
         }
         
         // Formulário de dados mensais
-        document.getElementById('monthlyForm').addEventListener('submit', function(e) {
+        document.getElementById('monthlyForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const mes = document.getElementById('mes').value;
@@ -752,46 +933,42 @@
             const tempoOff = parseFloat(document.getElementById('tempoOff').value);
             const observacoes = document.getElementById('observacoesMonthly').value.trim();
 
-            if (editingMonthlyId) {
-                // Modo edição
-                const index = monthlyData.findIndex(entry => entry.id === editingMonthlyId);
-                if (index !== -1) {
-                    monthlyData[index] = {
-                        id: editingMonthlyId,
-                        mes,
-                        atendimentos,
-                        horasExtras,
-                        treinamentos,
-                        tempoOff,
-                        observacoes
-                    };
+            const formData = {
+                mes,
+                atendimentos,
+                horasExtras,
+                treinamentos,
+                tempoOff,
+                observacoes
+            };
+
+            try {
+                if (editingMonthlyId) {
+                    // Modo edição
+                    await saveMonthlyDataToAPI(formData, true, editingMonthlyId);
+                    cancelEdit();
+                    showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro atualizado!');
+                } else {
+                    // Modo novo registro
+                    await saveMonthlyDataToAPI(formData);
+                    showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro adicionado!');
+                    document.getElementById('monthlyForm').reset();
                 }
-                cancelEdit();
-                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro atualizado!');
-            } else {
-                // Modo novo registro
-                const newEntry = {
-                    id: Date.now(),
-                    mes,
-                    atendimentos,
-                    horasExtras,
-                    treinamentos,
-                    tempoOff,
-                    observacoes
-                };
                 
-                monthlyData.push(newEntry);
-                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro adicionado!');
-                document.getElementById('monthlyForm').reset();
+                // Recarregar dados da API
+                await loadMonthlyDataFromAPI();
+                updateMonthlyTable();
+                await loadStatsFromAPI();
+                
+                // Backup local
+                saveData();
+            } catch (error) {
+                console.error('Erro ao salvar dados mensais:', error);
             }
-            
-            saveData();
-            updateMonthlyTable();
-            updateStats();
         });
 
         // Formulário de viagens
-        document.getElementById('travelForm').addEventListener('submit', function(e) {
+        document.getElementById('travelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const cidade = document.getElementById('cidade').value;
@@ -807,42 +984,38 @@
                 return;
             }
             
-            if (editingTravelId) {
-                // Modo edição
-                const index = travelData.findIndex(entry => entry.id === editingTravelId);
-                if (index !== -1) {
-                    travelData[index] = {
-                        id: editingTravelId,
-                        cidade,
-                        tempoDeslocamento,
-                        tempoAtendimento,
-                        dataInicio,
-                        dataFim,
-                        observacoes
-                    };
+            const formData = {
+                cidade,
+                tempoDeslocamento,
+                tempoAtendimento,
+                dataInicio,
+                dataFim,
+                observacoes
+            };
+
+            try {
+                if (editingTravelId) {
+                    // Modo edição
+                    await saveTravelDataToAPI(formData, true, editingTravelId);
+                    cancelTravelEdit();
+                    showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem atualizada!');
+                } else {
+                    // Modo novo registro
+                    await saveTravelDataToAPI(formData);
+                    showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem registrada!');
+                    document.getElementById('travelForm').reset();
                 }
-                cancelTravelEdit();
-                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem atualizada!');
-            } else {
-                // Modo novo registro
-                const newTravel = {
-                    id: Date.now(),
-                    cidade,
-                    tempoDeslocamento,
-                    tempoAtendimento,
-                    dataInicio,
-                    dataFim,
-                    observacoes
-                };
                 
-                travelData.push(newTravel);
-                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem registrada!');
-                document.getElementById('travelForm').reset();
+                // Recarregar dados da API
+                await loadTravelDataFromAPI();
+                updateTravelTable();
+                await loadStatsFromAPI();
+                
+                // Backup local
+                saveData();
+            } catch (error) {
+                console.error('Erro ao salvar dados de viagem:', error);
             }
-            
-            saveData();
-            updateTravelTable();
-            updateStats();
         });
 
         // Funções de edição para dados mensais
@@ -979,7 +1152,7 @@
             });
         }
         
-        // Atualizar estatísticas
+        // Atualizar estatísticas (fallback para dados locais)
         function updateStats() {
             const totalAtendimentos = monthlyData.reduce((sum, entry) => sum + entry.atendimentos, 0);
             const totalHoras = monthlyData.reduce((sum, entry) => sum + entry.horasExtras, 0);
@@ -997,30 +1170,40 @@
         }
         
         // Excluir entradas
-        function deleteMonthlyEntry(id) {
+        async function deleteMonthlyEntry(id) {
             if (confirm('Tem certeza que deseja excluir este registro?')) {
-                monthlyData = monthlyData.filter(entry => entry.id !== id);
-                saveData();
-                updateMonthlyTable();
-                updateStats();
-                
-                // Se estava editando este registro, cancelar edição
-                if (editingMonthlyId === id) {
-                    cancelEdit();
+                try {
+                    await deleteMonthlyDataFromAPI(id);
+                    await loadMonthlyDataFromAPI();
+                    updateMonthlyTable();
+                    await loadStatsFromAPI();
+                    saveData(); // Backup local
+                    
+                    // Se estava editando este registro, cancelar edição
+                    if (editingMonthlyId === id) {
+                        cancelEdit();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir registro mensal:', error);
                 }
             }
         }
 
-        function deleteTravelEntry(id) {
+        async function deleteTravelEntry(id) {
             if (confirm('Tem certeza que deseja excluir este registro de viagem?')) {
-                travelData = travelData.filter(entry => entry.id !== id);
-                saveData();
-                updateTravelTable();
-                updateStats();
-                
-                // Se estava editando este registro, cancelar edição
-                if (editingTravelId === id) {
-                    cancelTravelEdit();
+                try {
+                    await deleteTravelDataFromAPI(id);
+                    await loadTravelDataFromAPI();
+                    updateTravelTable();
+                    await loadStatsFromAPI();
+                    saveData(); // Backup local
+                    
+                    // Se estava editando este registro, cancelar edição
+                    if (editingTravelId === id) {
+                        cancelTravelEdit();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir registro de viagem:', error);
                 }
             }
         }

@@ -1,0 +1,145 @@
+# 📊 Sistema de Gestão Pessoal
+
+Sistema completo para controle de dados mensais e registros de viagem, com frontend responsivo e backend API REST.
+
+## 🚀 Funcionalidades
+
+### 📋 Dados Mensais
+- Controle de atendimentos mensais
+- Registro de horas em atividades de outros setores
+- Controle de treinamentos e capacitações online
+- Registro de tempo off para viagens
+- Observações personalizadas
+
+### ✈️ Registros de Viagem
+- Cadastro de destinos de viagem
+- Controle de tempo de deslocamento
+- Registro de horas em atendimento
+- Controle de período da viagem (início/fim)
+- Observações sobre cada viagem
+
+### 📊 Dashboard e Relatórios
+- Estatísticas consolidadas em tempo real
+- Totalizadores de atendimentos, horas extras e treinamentos
+- Métricas de viagens e deslocamentos
+- Exportação de dados para Excel
+- Interface responsiva e moderna
+
+## 🛠️ Tecnologias
+
+### Frontend
+- **HTML5** com design responsivo
+- **JavaScript vanilla** para interatividade
+- **CSS3** com gradientes e animações
+- **SheetJS (xlsx)** para exportação Excel
+- **LocalStorage** para persistência local
+
+### Backend
+- **FastAPI** - Framework web moderno e rápido
+- **SQLModel** - ORM baseado em SQLAlchemy e Pydantic
+- **SQLite** - Banco de dados embutido
+- **Uvicorn** - Servidor ASGI
+
+## 🔧 Instalação e Execução
+
+### 1. Instalar Dependências
+```bash
+# Instalar dependências (pode ser necessário usar --break-system-packages em alguns ambientes)
+python3 -m pip install -r requirements.txt
+```
+
+### 2. Executar o Backend
+```bash
+# Opção 1: Via script de conveniência
+python3 run.py
+
+# Opção 2: Via uvicorn diretamente
+python3 -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+
+# Opção 3: Via módulo backend
+python3 -m backend.main
+```
+
+### 3. Acessar a Aplicação
+- **Frontend**: Abrir `controle de dados.html` no navegador
+- **API Docs**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
+
+### 4. Testar Dados (Opcional)
+```bash
+# Criar dados de teste no banco
+python3 -c "from backend.test_data import create_test_data; create_test_data()"
+```
+
+## 📡 API Endpoints
+
+### Dados Mensais
+- `GET /api/monthly/` - Listar dados mensais
+- `POST /api/monthly/` - Criar novo registro mensal
+- `PUT /api/monthly/{id}` - Atualizar registro mensal
+- `DELETE /api/monthly/{id}` - Excluir registro mensal
+
+### Registros de Viagem
+- `GET /api/travel/` - Listar registros de viagem
+- `POST /api/travel/` - Criar novo registro de viagem
+- `PUT /api/travel/{id}` - Atualizar registro de viagem
+- `DELETE /api/travel/{id}` - Excluir registro de viagem
+
+### Estatísticas
+- `GET /api/stats/` - Obter estatísticas consolidadas
+
+## 💾 Estrutura do Banco de Dados
+
+### Tabela `monthly_data`
+- `id`: Identificador único
+- `mes`: Mês de referência (enum)
+- `atendimentos`: Número de atendimentos
+- `horas_extras`: Horas em outros setores
+- `treinamentos`: Horas de treinamentos
+- `tempo_off`: Tempo off em viagens
+- `observacoes`: Observações opcionais
+- `usuario`: Nome do usuário
+
+### Tabela `travel_data`
+- `id`: Identificador único
+- `cidade`: Cidade de destino
+- `tempo_deslocamento`: Horas de deslocamento
+- `tempo_atendimento`: Horas em atendimento
+- `data_inicio`: Data de início da viagem
+- `data_fim`: Data de término da viagem
+- `observacoes`: Observações opcionais
+- `usuario`: Nome do usuário
+
+## ✅ Status do Projeto
+
+### Implementado
+- [x] Backend FastAPI completo com SQLModel
+- [x] Frontend integrado com API REST
+- [x] CRUD completo para dados mensais e viagens
+- [x] Estatísticas em tempo real
+- [x] Banco de dados SQLite com migrações automáticas
+- [x] Indicador de conexão API/offline
+- [x] Fallback para localStorage quando API não disponível
+- [x] Interface responsiva e moderna
+- [x] Exportação para Excel
+- [x] Documentação automática da API
+
+### 🎯 Próximos Passos
+
+- [ ] Sistema de autenticação/autorização JWT
+- [ ] Relatórios avançados com gráficos
+- [ ] Dashboard analítico interativo
+- [ ] Deploy em produção (Docker + Nginx)
+- [ ] Testes automatizados (pytest + frontend tests)
+- [ ] Notificações e lembretes
+- [ ] Import de dados via CSV/Excel
+- [ ] Backup automático dos dados
+
+## 📝 Licença
+
+Este projeto é de uso pessoal e educacional.
+
+---
+
+⚡ **Desenvolvido com FastAPI + SQLModel para máxima performance e facilidade de uso!**
