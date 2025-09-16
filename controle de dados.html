@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Sistema Pessoal de Dados</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -426,6 +427,175 @@
         .success-state {
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
         }
+
+        /* Dashboard Analytics */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+            margin: 32px 0;
+            padding: 0 16px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 32px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(46, 125, 89, 0.06);
+            border: 1px solid #e8f2f0;
+            border-top: 3px solid #2e7d59;
+            transition: all 0.2s ease;
+            min-height: 420px;
+            position: relative;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(46, 125, 89, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8f2f0;
+            min-height: 60px;
+        }
+
+        .chart-title {
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.3;
+            flex: 1;
+            padding-right: 16px;
+        }
+
+        .chart-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2e7d59;
+            white-space: nowrap;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        /* Espaçamento adicional para o dashboard */
+        #dashboard {
+            padding-top: 24px;
+        }
+
+        #dashboard .content {
+            overflow-x: hidden;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 320px;
+            width: 100%;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .chart-canvas canvas {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+        }
+
+        .chart-canvas.small {
+            height: 280px;
+        }
+
+        .chart-canvas.large {
+            height: 360px;
+        }
+
+        .analytics-summary {
+            background: linear-gradient(135deg, #f8fafb 0%, #e8f2f0 100%);
+            padding: 24px;
+            border-radius: 8px;
+            margin: 0 0 40px 0;
+            text-align: center;
+        }
+
+        .analytics-summary h3 {
+            color: #2e7d59;
+            margin-bottom: 8px;
+        }
+
+        .loading-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .no-data i {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+                padding: 0 8px;
+                margin: 24px 0;
+            }
+
+            .chart-container {
+                padding: 24px 16px;
+                margin-bottom: 32px;
+                min-height: 380px;
+            }
+
+            .chart-canvas {
+                height: 280px;
+                margin-top: 20px;
+            }
+
+            .chart-canvas.small {
+                height: 250px;
+            }
+
+            .chart-canvas.large {
+                height: 300px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                margin-bottom: 20px;
+                min-height: auto;
+            }
+
+            .chart-title {
+                font-size: 1em;
+                line-height: 1.4;
+            }
+        }
+
+        @media (max-width: 1200px) and (min-width: 769px) {
+            .analytics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -433,6 +603,9 @@
         <div class="header">
             <h1>📊 Sistema de Gestão Pessoal</h1>
             <p>Controle profissional de dados mensais e registros de viagem</p>
+            <div id="apiStatus" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                <span id="apiIndicator">🔄 Verificando conexão...</span>
+            </div>
         </div>
         
         <div class="content">
@@ -484,12 +657,67 @@
             <!-- Tabs -->
             <div id="mainContent" class="hidden">
                 <div class="tabs">
-                    <button class="tab active" onclick="switchTab('monthly')">📋 Dados Mensais</button>
+                    <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+                    <button class="tab" onclick="switchTab('monthly')">📋 Dados Mensais</button>
                     <button class="tab" onclick="switchTab('travel')">✈️ Registros de Viagem</button>
                 </div>
 
+                <!-- Dashboard -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="analytics-summary">
+                        <h3>📊 Dashboard Analítico</h3>
+                        <p>Visualizações interativas dos seus dados de gestão pessoal</p>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <!-- Distribuição por Tipo de Atendimento -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Distribuição por Tipo de Atendimento</h3>
+                                <div class="chart-value" id="attendanceTotal">-</div>
+                            </div>
+                            <div class="chart-canvas small">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Horas por Cidade -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Horas por Cidade (Deslocamento x Atendimento)</h3>
+                                <div class="chart-value" id="cityHoursTotal">-</div>
+                            </div>
+                            <div class="chart-canvas">
+                                <canvas id="cityHoursChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Evolução Mensal de Atendimentos -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Evolução Mensal de Atendimentos</h3>
+                                <div class="chart-value" id="evolutionMonths">-</div>
+                            </div>
+                            <div class="chart-canvas large">
+                                <canvas id="evolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Top Clientes/Projetos -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Top Clientes/Projetos</h3>
+                                <div class="chart-value" id="topClientsTotal">-</div>
+                            </div>
+                            <div class="chart-canvas">
+                                <canvas id="topClientsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Dados Mensais -->
-                <div id="monthly" class="tab-content active">
+                <div id="monthly" class="tab-content">
                     <div class="section">
                         <div id="editIndicator" class="edit-indicator hidden">
                             📝 Modo de Edição - Modifique os dados e clique em "Salvar Alterações"
@@ -654,21 +882,185 @@
         let editingMonthlyId = null;
         let editingTravelId = null;
         
+        // Configuração da API
+        const API_BASE_URL = 'http://localhost:8000/api';
+        let apiConnected = false;
+        
+        // Funções da API
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                alert('Erro na comunicação com o servidor: ' + error.message);
+                throw error;
+            }
+        }
+        
+        // Carregar dados mensais da API
+        async function loadMonthlyDataFromAPI() {
+            if (!currentUser) return;
+            try {
+                const data = await apiCall(`${API_BASE_URL}/monthly/?usuario=${encodeURIComponent(currentUser)}`);
+                monthlyData = data.map(item => ({
+                    id: item.id,
+                    mes: item.mes,
+                    atendimentos: item.atendimentos,
+                    horasExtras: item.horas_extras,
+                    treinamentos: item.treinamentos,
+                    tempoOff: item.tempo_off,
+                    observacoes: item.observacoes
+                }));
+            } catch (error) {
+                console.error('Erro ao carregar dados mensais:', error);
+            }
+        }
+        
+        // Carregar dados de viagem da API
+        async function loadTravelDataFromAPI() {
+            if (!currentUser) return;
+            try {
+                const data = await apiCall(`${API_BASE_URL}/travel/?usuario=${encodeURIComponent(currentUser)}`);
+                travelData = data.map(item => ({
+                    id: item.id,
+                    cidade: item.cidade,
+                    tempoDeslocamento: item.tempo_deslocamento,
+                    tempoAtendimento: item.tempo_atendimento,
+                    dataInicio: item.data_inicio,
+                    dataFim: item.data_fim,
+                    observacoes: item.observacoes
+                }));
+            } catch (error) {
+                console.error('Erro ao carregar dados de viagem:', error);
+            }
+        }
+        
+        // Salvar dados mensais na API
+        async function saveMonthlyDataToAPI(data, isUpdate = false, id = null) {
+            const payload = {
+                mes: data.mes,
+                atendimentos: parseInt(data.atendimentos),
+                horas_extras: parseFloat(data.horasExtras),
+                treinamentos: parseFloat(data.treinamentos),
+                tempo_off: parseFloat(data.tempoOff),
+                observacoes: data.observacoes || null,
+                usuario: currentUser
+            };
+            
+            if (isUpdate && id) {
+                return await apiCall(`${API_BASE_URL}/monthly/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                return await apiCall(`${API_BASE_URL}/monthly/`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+        }
+        
+        // Salvar dados de viagem na API
+        async function saveTravelDataToAPI(data, isUpdate = false, id = null) {
+            const payload = {
+                cidade: data.cidade,
+                tempo_deslocamento: parseFloat(data.tempoDeslocamento),
+                tempo_atendimento: parseFloat(data.tempoAtendimento),
+                data_inicio: data.dataInicio,
+                data_fim: data.dataFim,
+                observacoes: data.observacoes || null,
+                usuario: currentUser
+            };
+            
+            if (isUpdate && id) {
+                return await apiCall(`${API_BASE_URL}/travel/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                return await apiCall(`${API_BASE_URL}/travel/`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+        }
+        
+        // Excluir dados mensais da API
+        async function deleteMonthlyDataFromAPI(id) {
+            return await apiCall(`${API_BASE_URL}/monthly/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                method: 'DELETE'
+            });
+        }
+        
+        // Excluir dados de viagem da API
+        async function deleteTravelDataFromAPI(id) {
+            return await apiCall(`${API_BASE_URL}/travel/${id}?usuario=${encodeURIComponent(currentUser)}`, {
+                method: 'DELETE'
+            });
+        }
+        
+        // Carregar estatísticas da API
+        async function loadStatsFromAPI() {
+            if (!currentUser) return;
+            try {
+                const stats = await apiCall(`${API_BASE_URL}/stats/?usuario=${encodeURIComponent(currentUser)}`);
+                document.getElementById('totalAtendimentos').textContent = stats.total_atendimentos;
+                document.getElementById('totalHoras').textContent = stats.total_horas_extras.toFixed(1);
+                document.getElementById('totalTreinamentos').textContent = stats.total_treinamentos.toFixed(1);
+                document.getElementById('totalViagens').textContent = stats.total_viagens;
+                document.getElementById('totalDeslocamento').textContent = stats.total_deslocamento.toFixed(1);
+                document.getElementById('totalAtendimentoViagem').textContent = stats.total_atendimento_viagem.toFixed(1);
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+        
+        // Verificar status da API
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    apiConnected = true;
+                    document.getElementById('apiIndicator').innerHTML = '🟢 API conectada - Dados sincronizados';
+                } else {
+                    throw new Error('API não disponível');
+                }
+            } catch (error) {
+                apiConnected = false;
+                document.getElementById('apiIndicator').innerHTML = '🔴 API desconectada - Modo offline (localStorage)';
+                console.warn('API não disponível, usando modo offline:', error);
+            }
+        }
+        
         // Inicialização
-        function init() {
+        async function init() {
+            await checkAPIStatus();
             loadUserData();
             if (currentUser) {
-                showMainContent();
+                await showMainContent();
             }
         }
 
         // Setup do usuário
-        function setupUser() {
+        async function setupUser() {
             const userName = document.getElementById('userName').value.trim();
             if (userName) {
                 currentUser = userName;
                 saveUserData();
-                showMainContent();
+                await showMainContent();
             } else {
                 alert('Por favor, digite seu nome!');
             }
@@ -682,13 +1074,13 @@
             document.getElementById('userName').value = currentUser;
         }
 
-        function showMainContent() {
+        async function showMainContent() {
             document.getElementById('userSetup').classList.add('hidden');
             document.getElementById('userWelcome').classList.remove('hidden');
             document.getElementById('statsSection').classList.remove('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
             document.getElementById('welcomeName').textContent = currentUser;
-            loadSavedData();
+            await loadSavedData();
         }
 
         // Gerenciamento de dados do usuário
@@ -719,20 +1111,36 @@
         }
         
         // Carregar dados salvos
-        function loadSavedData() {
-            const savedMonthly = localStorage.getItem(`monthlyData_${currentUser}`);
-            const savedTravel = localStorage.getItem(`travelData_${currentUser}`);
-            
-            if (savedMonthly) {
-                monthlyData = JSON.parse(savedMonthly);
+        async function loadSavedData() {
+            try {
+                // Carregar dados da API em paralelo
+                await Promise.all([
+                    loadMonthlyDataFromAPI(),
+                    loadTravelDataFromAPI(),
+                    loadAnalyticsFromAPI() // Carregar gráficos
+                ]);
+                
+                updateMonthlyTable();
+                updateTravelTable();
+                await loadStatsFromAPI();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                // Fallback para localStorage se a API falhar
+                const savedMonthly = localStorage.getItem(`monthlyData_${currentUser}`);
+                const savedTravel = localStorage.getItem(`travelData_${currentUser}`);
+                
+                if (savedMonthly) {
+                    monthlyData = JSON.parse(savedMonthly);
+                }
+                if (savedTravel) {
+                    travelData = JSON.parse(savedTravel);
+                }
+                
+                updateMonthlyTable();
+                updateTravelTable();
+                updateStats();
+                showNoDataMessage(); // Mostrar que não há dados de gráficos
             }
-            if (savedTravel) {
-                travelData = JSON.parse(savedTravel);
-            }
-            
-            updateMonthlyTable();
-            updateTravelTable();
-            updateStats();
         }
         
         // Salvar dados
@@ -742,7 +1150,7 @@
         }
         
         // Formulário de dados mensais
-        document.getElementById('monthlyForm').addEventListener('submit', function(e) {
+        document.getElementById('monthlyForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const mes = document.getElementById('mes').value;
@@ -752,46 +1160,43 @@
             const tempoOff = parseFloat(document.getElementById('tempoOff').value);
             const observacoes = document.getElementById('observacoesMonthly').value.trim();
 
-            if (editingMonthlyId) {
-                // Modo edição
-                const index = monthlyData.findIndex(entry => entry.id === editingMonthlyId);
-                if (index !== -1) {
-                    monthlyData[index] = {
-                        id: editingMonthlyId,
-                        mes,
-                        atendimentos,
-                        horasExtras,
-                        treinamentos,
-                        tempoOff,
-                        observacoes
-                    };
+            const formData = {
+                mes,
+                atendimentos,
+                horasExtras,
+                treinamentos,
+                tempoOff,
+                observacoes
+            };
+
+            try {
+                if (editingMonthlyId) {
+                    // Modo edição
+                    await saveMonthlyDataToAPI(formData, true, editingMonthlyId);
+                    cancelEdit();
+                    showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro atualizado!');
+                } else {
+                    // Modo novo registro
+                    await saveMonthlyDataToAPI(formData);
+                    showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro adicionado!');
+                    document.getElementById('monthlyForm').reset();
                 }
-                cancelEdit();
-                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro atualizado!');
-            } else {
-                // Modo novo registro
-                const newEntry = {
-                    id: Date.now(),
-                    mes,
-                    atendimentos,
-                    horasExtras,
-                    treinamentos,
-                    tempoOff,
-                    observacoes
-                };
                 
-                monthlyData.push(newEntry);
-                showSuccessMessage(document.getElementById('monthlySubmitBtn'), 'Registro adicionado!');
-                document.getElementById('monthlyForm').reset();
+                // Recarregar dados da API
+                await loadMonthlyDataFromAPI();
+                updateMonthlyTable();
+                await loadStatsFromAPI();
+                await loadAnalyticsFromAPI(); // Atualizar gráficos
+                
+                // Backup local
+                saveData();
+            } catch (error) {
+                console.error('Erro ao salvar dados mensais:', error);
             }
-            
-            saveData();
-            updateMonthlyTable();
-            updateStats();
         });
 
         // Formulário de viagens
-        document.getElementById('travelForm').addEventListener('submit', function(e) {
+        document.getElementById('travelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const cidade = document.getElementById('cidade').value;
@@ -807,42 +1212,39 @@
                 return;
             }
             
-            if (editingTravelId) {
-                // Modo edição
-                const index = travelData.findIndex(entry => entry.id === editingTravelId);
-                if (index !== -1) {
-                    travelData[index] = {
-                        id: editingTravelId,
-                        cidade,
-                        tempoDeslocamento,
-                        tempoAtendimento,
-                        dataInicio,
-                        dataFim,
-                        observacoes
-                    };
+            const formData = {
+                cidade,
+                tempoDeslocamento,
+                tempoAtendimento,
+                dataInicio,
+                dataFim,
+                observacoes
+            };
+
+            try {
+                if (editingTravelId) {
+                    // Modo edição
+                    await saveTravelDataToAPI(formData, true, editingTravelId);
+                    cancelTravelEdit();
+                    showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem atualizada!');
+                } else {
+                    // Modo novo registro
+                    await saveTravelDataToAPI(formData);
+                    showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem registrada!');
+                    document.getElementById('travelForm').reset();
                 }
-                cancelTravelEdit();
-                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem atualizada!');
-            } else {
-                // Modo novo registro
-                const newTravel = {
-                    id: Date.now(),
-                    cidade,
-                    tempoDeslocamento,
-                    tempoAtendimento,
-                    dataInicio,
-                    dataFim,
-                    observacoes
-                };
                 
-                travelData.push(newTravel);
-                showSuccessMessage(document.getElementById('travelSubmitBtn'), 'Viagem registrada!');
-                document.getElementById('travelForm').reset();
+                // Recarregar dados da API
+                await loadTravelDataFromAPI();
+                updateTravelTable();
+                await loadStatsFromAPI();
+                await loadAnalyticsFromAPI(); // Atualizar gráficos
+                
+                // Backup local
+                saveData();
+            } catch (error) {
+                console.error('Erro ao salvar dados de viagem:', error);
             }
-            
-            saveData();
-            updateTravelTable();
-            updateStats();
         });
 
         // Funções de edição para dados mensais
@@ -979,7 +1381,7 @@
             });
         }
         
-        // Atualizar estatísticas
+        // Atualizar estatísticas (fallback para dados locais)
         function updateStats() {
             const totalAtendimentos = monthlyData.reduce((sum, entry) => sum + entry.atendimentos, 0);
             const totalHoras = monthlyData.reduce((sum, entry) => sum + entry.horasExtras, 0);
@@ -997,30 +1399,42 @@
         }
         
         // Excluir entradas
-        function deleteMonthlyEntry(id) {
+        async function deleteMonthlyEntry(id) {
             if (confirm('Tem certeza que deseja excluir este registro?')) {
-                monthlyData = monthlyData.filter(entry => entry.id !== id);
-                saveData();
-                updateMonthlyTable();
-                updateStats();
-                
-                // Se estava editando este registro, cancelar edição
-                if (editingMonthlyId === id) {
-                    cancelEdit();
+                try {
+                    await deleteMonthlyDataFromAPI(id);
+                    await loadMonthlyDataFromAPI();
+                    updateMonthlyTable();
+                    await loadStatsFromAPI();
+                    await loadAnalyticsFromAPI(); // Atualizar gráficos
+                    saveData(); // Backup local
+                    
+                    // Se estava editando este registro, cancelar edição
+                    if (editingMonthlyId === id) {
+                        cancelEdit();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir registro mensal:', error);
                 }
             }
         }
 
-        function deleteTravelEntry(id) {
+        async function deleteTravelEntry(id) {
             if (confirm('Tem certeza que deseja excluir este registro de viagem?')) {
-                travelData = travelData.filter(entry => entry.id !== id);
-                saveData();
-                updateTravelTable();
-                updateStats();
-                
-                // Se estava editando este registro, cancelar edição
-                if (editingTravelId === id) {
-                    cancelTravelEdit();
+                try {
+                    await deleteTravelDataFromAPI(id);
+                    await loadTravelDataFromAPI();
+                    updateTravelTable();
+                    await loadStatsFromAPI();
+                    await loadAnalyticsFromAPI(); // Atualizar gráficos
+                    saveData(); // Backup local
+                    
+                    // Se estava editando este registro, cancelar edição
+                    if (editingTravelId === id) {
+                        cancelTravelEdit();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir registro de viagem:', error);
                 }
             }
         }
@@ -1090,6 +1504,285 @@
             
             // Fazer download
             XLSX.writeFile(wb, fileName);
+        }
+        
+        // ========== ANALYTICS E GRÁFICOS ==========
+        
+        let charts = {}; // Armazenar instâncias dos gráficos
+        
+        // Carregar dados analíticos da API
+        async function loadAnalyticsFromAPI() {
+            if (!currentUser) return;
+            
+            try {
+                const [attendanceData, cityHoursData, evolutionData, topClientsData] = await Promise.all([
+                    apiCall(`${API_BASE_URL}/analytics/attendance-distribution?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/hours-by-city?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/monthly-evolution?usuario=${encodeURIComponent(currentUser)}`),
+                    apiCall(`${API_BASE_URL}/analytics/top-clients?usuario=${encodeURIComponent(currentUser)}`)
+                ]);
+                
+                // Renderizar gráficos
+                renderAttendanceChart(attendanceData);
+                renderCityHoursChart(cityHoursData);
+                renderEvolutionChart(evolutionData);
+                renderTopClientsChart(topClientsData);
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados analíticos:', error);
+                showNoDataMessage();
+            }
+        }
+        
+        // Gráfico de Distribuição por Tipo de Atendimento (Donut)
+        function renderAttendanceChart(data) {
+            const ctx = document.getElementById('attendanceChart');
+            
+            // Destruir gráfico existente se houver
+            if (charts.attendance) {
+                charts.attendance.destroy();
+            }
+            
+            document.getElementById('attendanceTotal').textContent = data.total;
+            
+            if (data.total === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.attendance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            '#2e7d59', // Remoto - Verde principal
+                            '#8b5a3c', // Presencial - Marrom
+                            '#f39c12'  // Híbrido - Laranja
+                        ],
+                        borderWidth: 0,
+                        hoverBorderWidth: 2,
+                        hoverBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.raw / data.total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Horas por Cidade (Barras Empilhadas)
+        function renderCityHoursChart(data) {
+            const ctx = document.getElementById('cityHoursChart');
+            
+            if (charts.cityHours) {
+                charts.cityHours.destroy();
+            }
+            
+            document.getElementById('cityHoursTotal').textContent = `${data.total_hours.toFixed(1)}h`;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.cityHours = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'h';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}h`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Evolução Mensal (Linha)
+        function renderEvolutionChart(data) {
+            const ctx = document.getElementById('evolutionChart');
+            
+            if (charts.evolution) {
+                charts.evolution.destroy();
+            }
+            
+            document.getElementById('evolutionMonths').textContent = `${data.total_months} meses`;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.evolution = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Meses'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade'
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de Top Clientes (Barras Horizontais)
+        function renderTopClientsChart(data) {
+            const ctx = document.getElementById('topClientsChart');
+            
+            if (charts.topClients) {
+                charts.topClients.destroy();
+            }
+            
+            document.getElementById('topClientsTotal').textContent = data.total;
+            
+            if (data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+            
+            charts.topClients = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: '#8b5a3c',
+                        borderColor: '#7d4f35',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    return `Ocorrências: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Mostrar mensagem quando não há dados
+        function showNoDataMessage() {
+            const containers = document.querySelectorAll('.chart-canvas');
+            containers.forEach(container => {
+                container.innerHTML = '<div class="no-data">📊<br>Nenhum dado disponível</div>';
+            });
         }
         
         // Inicializar aplicação
