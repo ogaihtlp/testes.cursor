@@ -654,6 +654,24 @@
         let editingMonthlyId = null;
         let editingTravelId = null;
         
+        // Configuração da API para rede local
+        const API_BASE = getApiBaseUrl();
+        
+        // Função para detectar automaticamente o IP da rede local
+        function getApiBaseUrl() {
+            // Tenta detectar o IP da máquina na rede local
+            const hostname = window.location.hostname;
+            const port = '8000';
+            
+            // Se estiver rodando localmente, usa localhost
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return `http://localhost:${port}`;
+            }
+            
+            // Se estiver rodando em rede local, usa o IP da máquina
+            return `http://${hostname}:${port}`;
+        }
+        
         // Inicialização
         function init() {
             loadUserData();
